@@ -1,0 +1,3 @@
+spring:
+  application:
+    name: kafka-core-concepts-demo
