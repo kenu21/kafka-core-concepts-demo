@@ -15,3 +15,32 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  kafka-connect:
+    image: apache/kafka:4.1.1
+    container_name: kafka-connect
+    depends_on:
+      - kafka
+    ports:
+      - "8083:8083"
+    command: |
+      bash -c 'cat <<EOF > /opt/kafka/config/connect-distributed.properties
+      bootstrap.servers=kafka:9092
+      group.id=connect-cluster
+      config.storage.topic=_connect-configs
+      offset.storage.topic=_connect-offsets
+      status.storage.topic=_connect-status
+      config.storage.replication.factor=1
+      offset.storage.replication.factor=1
+      status.storage.replication.factor=1
+      key.converter=org.apache.kafka.connect.storage.StringConverter
+      value.converter=org.apache.kafka.connect.storage.StringConverter
+      key.converter.schemas.enable=false
+      value.converter.schemas.enable=false
+      plugin.path=/opt/kafka/libs
+      rest.port=8083
+      rest.host.name=0.0.0.0
+      EOF
+      /opt/kafka/bin/connect-distributed.sh /opt/kafka/config/connect-distributed.properties'
+    volumes:
+      - ./connect-data:/data
