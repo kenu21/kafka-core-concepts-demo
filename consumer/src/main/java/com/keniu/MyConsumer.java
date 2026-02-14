@@ -18,12 +18,12 @@ public class MyConsumer {
     }
 
     @KafkaListener(topics = "test-topic", groupId = "test-group")
-    public void listen(
+    public void listenTestTopic(
             ConsumerRecord<String, String> consumerRecord,
             Acknowledgment acknowledgment,
             Consumer<?, ?> consumer
     ) {
-        System.out.println("Received: " + consumerRecord.value());
+        System.out.println("Received from test-topic: " + consumerRecord.value());
 
         TopicPartition topicPartition = new TopicPartition(consumerRecord.topic(), consumerRecord.partition());
         long endOffset = consumer.endOffsets(Collections.singleton(topicPartition)).get(topicPartition);
@@ -41,5 +41,10 @@ public class MyConsumer {
         acknowledgment.acknowledge();
 
         myRebalanceListener.updateOffset(topicPartition, consumerRecord.offset() + 1);
+    }
+
+    @KafkaListener(topics = "processed-topic", groupId = "test-group")
+    public void listenProcessedTopic(String message) {
+        System.out.println("Received from processed-topic: " + message);
     }
 }

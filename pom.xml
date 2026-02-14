@@ -14,6 +14,7 @@
         <module>producer</module>
         <module>consumer</module>
         <module>kafka-admin-tool</module>
+        <module>stream-processor</module>
     </modules>
 
     <licenses>
@@ -45,6 +46,13 @@
             <dependency>
                 <groupId>org.apache.kafka</groupId>
                 <artifactId>kafka-clients</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-streams</artifactId>
                 <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
