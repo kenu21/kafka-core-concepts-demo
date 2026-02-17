@@ -4,17 +4,40 @@ services:
     container_name: kafka
     ports:
       - "9097:9097"
+      - "9094:9094"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9097,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9097
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9097,SASL_SSL://0.0.0.0:9094,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9097,SASL_SSL://localhost:9094
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,SASL_SSL:SASL_SSL
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+      CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
+      KAFKA_SSL_CLIENT_AUTH: required
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.keystore.jks
+      KAFKA_SSL_KEY_CREDENTIALS: kafka.key.password
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka.keystore.password
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka.truststore.password
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/secrets/kafka_server_jaas.conf"
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:ANONYMOUS
+
+    volumes:
+      - ./kafka.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
+      - ./kafka.key.password:/etc/kafka/secrets/kafka.key.password
+      - ./kafka.keystore.password:/etc/kafka/secrets/kafka.keystore.password
+      - ./kafka.truststore.jks:/etc/kafka/secrets/kafka.truststore.jks
+      - ./kafka.truststore.password:/etc/kafka/secrets/kafka.truststore.password
+      - ./kafka_server_jaas.conf:/etc/kafka/secrets/kafka_server_jaas.conf
 
   kafka-connect:
     image: apache/kafka:4.1.1
@@ -44,3 +67,12 @@ services:
       /opt/kafka/bin/connect-distributed.sh /opt/kafka/config/connect-distributed.properties'
     volumes:
       - ./connect-data:/data
+
+  kafka-acl-init:
+    image: apache/kafka:4.1.1
+    container_name: kafka-init
+    depends_on:
+      - kafka
+    entrypoint: [ "/bin/bash", "-x", "/etc/kafka/secrets/init-acls.sh" ]
+    volumes:
+      - ./init-acls.sh:/etc/kafka/secrets/init-acls.sh:ro

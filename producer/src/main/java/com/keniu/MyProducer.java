@@ -40,7 +40,7 @@ public class MyProducer {
 
     private ProducerFactory<String, String> producerFactory() {
         Map<String, Object> configs = new HashMap<>();
-        configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9097");
+        configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9094");
         configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configs.put(ProducerConfig.ACKS_CONFIG, "all");
@@ -49,6 +49,17 @@ public class MyProducer {
         configs.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "my-transactional-id");
         configs.put(ProducerConfig.BATCH_SIZE_CONFIG, BATCH_SIZE_32_KB);
         configs.put(ProducerConfig.LINGER_MS_CONFIG, LINGER_TIME_250_MS);
+
+        configs.put("security.protocol", "SASL_SSL");
+        configs.put("sasl.mechanism", "PLAIN");
+        configs.put("sasl.jaas.config",
+                "org.apache.kafka.common.security.plain.PlainLoginModule required " +
+                        "username=\"admin\" password=\"123456\";");
+        configs.put("ssl.truststore.type", "PKCS12");
+        configs.put("ssl.truststore.location", "kafka.truststore.jks");
+        configs.put("ssl.truststore.password", "123456");
+
+
         return new DefaultKafkaProducerFactory<>(configs);
     }
 }

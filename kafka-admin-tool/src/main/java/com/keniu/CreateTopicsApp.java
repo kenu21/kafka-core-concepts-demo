@@ -32,7 +32,8 @@ public class CreateTopicsApp {
                     "retention.bytes", RETENTION_1_GB
             ));
 
-            adminClient.createTopics(List.of(testTopic))
+             NewTopic processedTopic = new NewTopic("processed-topic", PARTITIONS, REPLICATION);
+            adminClient.createTopics(List.of(testTopic, processedTopic))
                     .all()
                     .get();
         }
